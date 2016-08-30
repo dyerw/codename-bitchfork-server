@@ -5,6 +5,7 @@ const jwt = require('koa-jwt');
 const router = require('koa-route');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
+const _ = require('lodash');
 
 const User = require('./models/user');
 const Review = require('./models/review');
@@ -53,24 +54,13 @@ app.use(router.get('/auth', function *() {
 // Create A Review
 app.use(router.post('/review', function *() {
   if (this.state.user) {
-    let review = new Review({
-      created: new Date(),
-      user: this.state.user.id,
-      albumName: this.request.fields.albumName,
-      albumMbid: this.request.fields.albumMbid,
-      albumArtUrl: this.request.fields.albumArtUrl,
-      artistName: this.request.fields.artistName,
-      relatedArtists: this.request.fields.relatedArtists,
-      moods: this.request.fields.moods,
-      writingScore: this.request.fields.writingScore,
-      discoveryScore: this.request.fields.discoveryScore,
-      reviewText: this.request.fields.reviewText,
-      trackPickName: this.request.fields.trackPickName,
-      trackPickMbid: this.request.fields.trackPickMbid,
-      genres: this.request.fields.genres
-    });
-    yield reviewDocument = review.save();
-    this.response.body = reviewDocument;
+    let review = new Review(_.merge(
+      {
+        created: new Date(),
+        user: this.state.user.id
+      }, this.request.fields));
+    reviewDocument = yield review.save();
+    this.response.body = reviewDocument.toObject();
   } else {
     this.response.status = 401;
     this.response.body = { error: "not authenticated" }

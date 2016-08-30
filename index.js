@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 
 const User = require('./models/user');
+const Review = require('./models/review');
 
 const app = koa();
 
@@ -32,18 +33,49 @@ app.use(router.post('/user', function *() {
 
 // Authenticate A User
 app.use(router.get('/auth', function *() {
-  let userDocument = yield User.findOne({ 'username': this.request.query.username });
+  let userDocument = yield User.find({ username: this.request.query.username }).exec();
+  if (userDocument.length == 0) {
+    this.status = 404;
+    this.body = { error: 'username does not exist' };
+    return ;
+  }
+
+  userDocument = userDocument[0];
 
   if(bcrypt.compareSync(this.request.query.password, userDocument.password)) {
     this.response.body = { token: jwt.sign({ id: userDocument._id }, SECRET) }
   } else {
-    this.response.statusCode = 401;
+    this.response.status = 401;
     this.response.body = { error: 'wrong password' };
   }
 }));
 
 // Create A Review
-// TODO: Implement
+app.use(router.post('/review', function *() {
+  if (this.state.user) {
+    let review = new Review({
+      created: new Date(),
+      user: this.state.user.id,
+      albumName: this.request.fields.albumName,
+      albumMbid: this.request.fields.albumMbid,
+      albumArtUrl: this.request.fields.albumArtUrl,
+      artistName: this.request.fields.artistName,
+      relatedArtists: this.request.fields.relatedArtists,
+      moods: this.request.fields.moods,
+      writingScore: this.request.fields.writingScore,
+      discoveryScore: this.request.fields.discoveryScore,
+      reviewText: this.request.fields.reviewText,
+      trackPickName: this.request.fields.trackPickName,
+      trackPickMbid: this.request.fields.trackPickMbid,
+      genres: this.request.fields.genres
+    });
+    yield reviewDocument = review.save();
+    this.response.body = reviewDocument;
+  } else {
+    this.response.status = 401;
+    this.response.body = { error: "not authenticated" }
+  }
+}));
 
 // Fetch Review Stream
 // TODO: Implement

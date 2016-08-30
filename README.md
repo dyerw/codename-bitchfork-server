@@ -9,3 +9,7 @@ the app.
 I cannot stress enough how unsecure this is.
 
 `node index.js`
+
+requires:
+
+`export MONGO_HOST="mongodb://blahblahblah/blah"`

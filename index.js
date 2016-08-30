@@ -68,6 +68,10 @@ app.use(router.post('/review', function *() {
 }));
 
 // Fetch Review Stream
-// TODO: Implement
+app.use(router.get('/review', function *() {
+  let reviews = yield Review.find({}).exec();
+  reviews = reviews.map(r => r.toObject());
+  this.response.body = reviews;
+}));
 
 app.listen(3070);
